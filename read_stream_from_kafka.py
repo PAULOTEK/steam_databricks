@@ -1,10 +1,10 @@
-# --- Parameters ---
+# --- Parâmetros ---
 confluentBootstrapServers = "pkc-*******.eastus.azure.confluent.cloud:9092"
 confluentTopicName = "sample_data_users"
 confluentApiKey = "*****************"
 confluentSecret = "****************************************"
 
-# --- Read Stream from Kafka ---
+# --- Ler Stream do Kafka ---
 from pyspark.sql.functions import col, from_json, expr
 from pyspark.sql.types import StructType, StructField, StringType, LongType
 
@@ -31,18 +31,18 @@ df_raw = (
     .load()
 )
 
-# Remove non-JSON leading characters from the value field
+# Remove caracteres não-JSON do campo value
 df_clean = df_raw.withColumn(
     "clean_value",
     expr("regexp_replace(CAST(value AS STRING), '^[^\\{]*', '')")
 )
 
-# Parse the cleaned JSON string
+# Parse da string JSON limpa
 df_parsed = df_clean.select(
     from_json(col("clean_value"), schema).alias("data")
 ).select("data.*")
 
 display(
     df_parsed,
-    checkpointLocation = "s3://YOUR_EXTERNAL_LOCATION_BUCKET_NAME/checkpoints/sample_data_users"
+    checkpointLocation = "s3://SEU_BUCKET/checkpoints/sample_data_users"
 )

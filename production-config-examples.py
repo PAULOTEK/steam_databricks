@@ -1,54 +1,54 @@
-# --- Production Configuration Examples ---
-# This file contains production-ready configuration examples for the Kafka-Databricks streaming architecture
+# --- Exemplos de Configuração de Produção ---
+# Este arquivo contém exemplos de configuração prontos para produção para a arquitetura de streaming Kafka-Databricks
 
-# --- 1. Cluster Configuration for Streaming ---
-# Production cluster configuration optimized for streaming workloads
+# --- 1. Configuração de Cluster para Streaming ---
+# Configuração de cluster de produção otimizada para workloads de streaming
 
 cluster_config = {
     "cluster_name": "kafka-streaming-production",
-    "spark_version": "13.3.x-scala2.12",  # Latest stable version
-    "autotermination_minutes": 0,  # Never auto-terminate for production
-    "num_workers": 8,  # Start with 8 workers, auto-scale as needed
-    "node_type_id": "i3.xlarge",  # Memory-optimized for streaming
+    "spark_version": "13.3.x-scala2.12",  # Última versão estável
+    "autotermination_minutes": 0,  # Nunca auto-terminar para produção
+    "num_workers": 8,  # Começar com 8 workers, auto-scale conforme necessário
+    "node_type_id": "i3.xlarge",  # Otimizado para memória para streaming
     "driver_node_type_id": "i3.xlarge",
     "spark_conf": {
-        # Streaming optimizations
-        "spark.sql.streaming.checkpointLocation": "s3://your-bucket/checkpoints/",
+        # Otimizações de streaming
+        "spark.sql.streaming.checkpointLocation": "s3://seu-bucket/checkpoints/",
         "spark.sql.streaming.forceDeleteTempCheckpointLocation": "true",
         
-        # Performance tuning
+        # Ajuste de performance
         "spark.sql.shuffle.partitions": "200",
         "spark.sql.adaptive.enabled": "true",
         "spark.sql.adaptive.coalescePartitions.enabled": "true",
         
-        # Memory management
+        # Gerenciamento de memória
         "spark.memory.fraction": "0.8",
         "spark.memory.storageFraction": "0.5",
         "spark.executor.memoryOverhead": "2g",
         
-        # Delta Lake optimizations
+        # Otimizações Delta Lake
         "spark.sql.execution.arrow.enabled": "true",
         "spark.delta.autoOptimize.optimizeWrite": "true",
         "spark.delta.autoOptimize.autoCompact": "true",
         
-        # Kafka specific
+        # Específico do Kafka
         "spark.streaming.backpressure.enabled": "true",
         "spark.streaming.backpressure.initialRate": "10000",
         "spark.streaming.kafka.maxRatePerPartition": "1000",
         
-        # Monitoring
+        # Monitoramento
         "spark.metrics.conf.*.sink.prometheus.class": "org.apache.spark.metrics.sink.PrometheusSink",
     },
     "custom_tags": {
-        "Environment": "Production",
+        "Environment": "Produção",
         "Team": "Data Engineering",
         "CostCenter": "Data Platform",
         "Project": "Kafka Streaming"
     }
 }
 
-# --- 2. Advanced Kafka Configuration with Retry Logic ---
-# Production Kafka configuration with enhanced error handling
+# --- 2. Configuração Avançada do Kafka com Lógica de Retry ---
+# Configuração de Kafka de produção com tratamento de erros avançado
 
 kafka_config_production = {
     "kafka.bootstrap.servers": "broker-1:9092,broker-2:9092,broker-3:9092",
@@ -56,14 +56,14 @@ kafka_config_production = {
     "kafka.sasl.mechanism": "PLAIN",
     "kafka.sasl.jaas.config": 'org.apache.kafka.common.security.plain.PlainLoginModule required username="${KAFKA_API_KEY}" password="${KAFKA_API_SECRET}";',
     
-    # Topic subscription with failover
+    # Assinatura de tópico com failover
     "subscribe": "users_events,orders_events,products_events",
     
-    # Offset management
-    "startingOffsets": "latest",  # For production, use latest
-    "failOnDataLoss": "false",  # Don't fail on data loss in production
+    # Gerenciamento de offset
+    "startingOffsets": "latest",  # Para produção, use latest
+    "failOnDataLoss": "false",  # Não falhar em perda de dados em produção
     
-    # Consumer configuration
+    # Configuração do consumer
     "kafka.consumer.fetch.max.bytes": "52428800",  # 50MB
     "kafka.consumer.max.partition.fetch.bytes": "1048576",  # 1MB
     "kafka.consumer.session.timeout.ms": "30000",
@@ -71,16 +71,16 @@ kafka_config_production = {
     "kafka.consumer.max.poll.records": "500",
     "kafka.consumer.max.poll.interval.ms": "300000",
     
-    # SSL/TLS configuration
+    # Configuração SSL/TLS
     "kafka.ssl.protocol": "TLSv1.2",
     "kafka.ssl.enabled.protocols": "TLSv1.2,TLSv1.3",
     
-    # Security
-    "kafka.consumer.enable.auto.commit": "false"  # Let Spark manage offsets
+    # Segurança
+    "kafka.consumer.enable.auto.commit": "false"  # Deixe Spark gerenciar offsets
 }
 
-# --- 3. Delta Table Configuration with Production Features ---
-# Production Delta table configuration
+# --- 3. Configuração de Tabela Delta com Features de Produção ---
+# Configuração de tabela Delta de produção
 
 delta_table_config = {
     "bronze": {
@@ -89,7 +89,7 @@ delta_table_config = {
             "delta.autoOptimize.autoCompact": "true",
             "delta.checkpoint.writeStatsAsStruct": "true",
             "delta.checkpoint.writeStatsAsJson": "false",
-            "delta.compressionCodec": "zstd",  # Better compression
+            "delta.compressionCodec": "zstd",  # Melhor compressão
             "delta.dataSkippingNumIndexedCols": "32",
             "delta.deletedFileRetentionDuration": "interval 7 days",
             "delta.logRetentionDuration": "interval 30 days",
@@ -131,8 +131,8 @@ delta_table_config = {
     }
 }
 
-# --- 4. Data Quality Rules for Production ---
-# Comprehensive data quality rules
+# --- 4. Regras de Qualidade de Dados para Produção ---
+# Regras abrangentes de qualidade de dados
 
 data_quality_rules = {
     "bronze_layer": {
@@ -199,7 +199,7 @@ data_quality_rules = {
             },
             {
                 "name": "reasonable_values",
-                "expectation": "revenue < 1000000",  # Business rule
+                "expectation": "revenue < 1000000",  # Regra de negócio
                 "action": "alert"
             }
         ],
@@ -212,15 +212,15 @@ data_quality_rules = {
     }
 }
 
-# --- 5. Monitoring and Alerting Configuration ---
-# Production monitoring setup
+# --- 5. Configuração de Monitoramento e Alertas ---
+# Setup de monitoramento de produção
 
 monitoring_config = {
     "alerts": {
         "streaming": [
             {
                 "name": "high_processing_latency",
-                "condition": "processing_latency_p95 > 5000",  # 5 seconds
+                "condition": "processing_latency_p95 > 5000",  # 5 segundos
                 "severity": "warning",
                 "notification": ["slack", "email"]
             },
@@ -266,7 +266,7 @@ monitoring_config = {
         "business": [
             {
                 "name": "data_freshness_issue",
-                "condition": "data_age > 300",  # 5 minutes
+                "condition": "data_age > 300",  # 5 minutos
                 "severity": "warning",
                 "notification": ["slack"]
             },
@@ -310,8 +310,8 @@ monitoring_config = {
     }
 }
 
-# --- 6. CI/CD Pipeline Configuration ---
-# Production deployment pipeline
+# --- 6. Configuração de Pipeline CI/CD ---
+# Pipeline de deployment de produção
 
 cicd_config = {
     "stages": {
@@ -356,15 +356,15 @@ cicd_config = {
     ]
 }
 
-# --- 7. Error Handling and Retry Logic ---
-# Production error handling
+# --- 7. Tratamento de Erros e Lógica de Retry ---
+# Tratamento de erros de produção
 
 error_handling_config = {
     "retry_policy": {
         "max_retries": 3,
         "backoff_multiplier": 2,
-        "initial_delay": 1000,  # 1 second
-        "max_delay": 60000,  # 1 minute
+        "initial_delay": 1000,  # 1 segundo
+        "max_delay": 60000,  # 1 minuto
         "retryable_errors": [
             "TimeoutError",
             "ConnectionError",
@@ -387,8 +387,8 @@ error_handling_config = {
     }
 }
 
-# --- 8. Cost Optimization Configuration ---
-# Production cost optimization
+# --- 8. Configuração de Otimização de Custos ---
+# Otimização de custos de produção
 
 cost_optimization_config = {
     "cluster_policies": {
@@ -407,7 +407,7 @@ cost_optimization_config = {
         "auto_termination": {
             "non_production": {
                 "enabled": True,
-                "idle_timeout": 30  # minutes
+                "idle_timeout": 30  # minutos
             },
             "production": {
                 "enabled": False
@@ -426,8 +426,8 @@ cost_optimization_config = {
     }
 }
 
-# --- 9. Security Configuration ---
-# Production security settings
+# --- 9. Configuração de Segurança ---
+# Configurações de segurança de produção
 
 security_config = {
     "encryption": {
@@ -472,8 +472,8 @@ security_config = {
     }
 }
 
-# --- 10. Disaster Recovery Configuration ---
-# Production disaster recovery
+# --- 10. Configuração de Recuperação de Desastres ---
+# Configuração de recuperação de desastres de produção
 
 disaster_recovery_config = {
     "backup_strategy": {
@@ -494,13 +494,13 @@ disaster_recovery_config = {
         }
     },
     "recovery_objectives": {
-        "rto": "15 minutes",  # Recovery Time Objective
-        "rpo": "1 minute",   # Recovery Point Objective
+        "rto": "15 minutes",  # Objetivo de Tempo de Recuperação
+        "rpo": "1 minute",   # Objetivo de Ponto de Recuperação
         "data_loss_tolerance": "0 events"
     },
     "failover": {
         "automatic": True,
-        "health_check_interval": 30,  # seconds
+        "health_check_interval": 30,  # segundos
         "failover_conditions": [
             "primary_region_unavailable",
             "replication_lag > 5 minutes",
@@ -509,18 +509,18 @@ disaster_recovery_config = {
     }
 }
 
-# --- Usage Example ---
-# Example of how to use these configurations in production
+# --- Exemplo de Uso ---
+# Exemplo de como usar estas configurações em produção
 
 def setup_production_pipeline():
     """
-    Setup a production-ready streaming pipeline using the configurations above
+    Configura um pipeline de streaming pronto para produção usando as configurações acima
     """
     
-    # Configure cluster
+    # Configurar cluster
     cluster = create_cluster(cluster_config)
     
-    # Setup Kafka connection with retry logic
+    # Setup de conexão Kafka com lógica de retry
     kafka_reader = (
         spark.readStream
         .format("kafka")
@@ -528,27 +528,27 @@ def setup_production_pipeline():
         .load()
     )
     
-    # Apply data quality rules
+    # Aplicar regras de qualidade de dados
     bronze_df = apply_data_quality(kafka_reader, data_quality_rules["bronze_layer"])
     
-    # Write to Bronze with Delta optimizations
+    # Escrever para Bronze com otimizações Delta
     bronze_writer = (
         bronze_df.writeStream
         .format("delta")
         .outputMode("append")
-        .option("checkpointLocation", "s3://your-bucket/checkpoints/bronze")
+        .option("checkpointLocation", "s3://seu-bucket/checkpoints/bronze")
         .options(**delta_table_config["bronze"]["table_properties"])
         .partitionBy(*delta_table_config["bronze"]["partitioning"])
         .toTable("bronze.streaming_events")
     )
     
-    # Setup monitoring
+    # Setup de monitoramento
     setup_monitoring(monitoring_config)
     
-    # Configure error handling
+    # Configurar tratamento de erros
     setup_error_handling(error_handling_config)
     
     return bronze_writer
 
-# This configuration file provides a comprehensive foundation for production deployment
-# Adjust parameters based on your specific requirements and environment
+# Este arquivo de configuração fornece uma base abrangente para deployment de produção
+# Ajuste os parâmetros baseado nos seus requisitos específicos e ambiente

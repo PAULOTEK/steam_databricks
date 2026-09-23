@@ -1,409 +1,409 @@
-# Production Architecture - Kafka to Databricks Streaming
+# Arquitetura de Produção - Streaming Kafka para Databricks
 
-## Overview
+## Visão Geral
 
-This document describes a production-ready architecture for streaming data from Kafka to Databricks Delta Lake, implementing a modern Lakehouse pattern with real-time data processing.
+Este documento descreve uma arquitetura pronta para produção para streaming de dados do Kafka para Databricks Delta Lake, implementando um padrão moderno de Lakehouse com processamento de dados em tempo real.
 
-## Architecture Diagram
+## Diagrama de Arquitetura
 
-The architecture is visualized in `architecture-drawio.xml` which can be imported into [Draw.io](https://app.diagrams.net/).
+A arquitetura é visualizada em `architecture-drawio.xml` que pode ser importado no [Draw.io](https://app.diagrams.net/).
 
-## Data Flow
+## Fluxo de Dados
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Data Sources   │───▶│  Kafka Cluster  │───▶│  Stream Process │───▶│  Delta Lake     │
-│                 │    │                 │    │                 │    │  Storage        │
-│ • Applications  │    │ • Topics        │    │ • Spark Streaming│    │ • Bronze Layer  │
-│ • IoT Devices   │    │ • Schema Reg    │    │ • DLT Pipelines  │    │ • Silver Layer  │
-│ • Databases CDC │    │ • Kafka Connect │    │ • Transformations│    │ • Gold Layer    │
-│ • APIs          │    │ • Consumer Grps │    │ • Quality Rules  │    │ • S3/ADLS       │
+│  Fontes de Dados│───▶│  Cluster Kafka  │───▶│  Processamento  │───▶│  Delta Lake     │
+│                 │    │                 │    │  de Stream      │    │  Storage        │
+│ • Aplicações    │    │ • Tópicos       │    │                 │    │ • Camada Bronze │
+│ • Dispositivos IoT│   │ • Schema Reg    │    │ • Spark Streaming│    │ • Camada Silver │
+│ • Bancos (CDC)  │    │ • Kafka Connect │    │ • Pipelines DLT  │    │ • Camada Gold   │
+│ • APIs          │    │ • Consumer Grps │    │ • Transformações│    │ • S3/ADLS       │
 └─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                      │                      │                      │
-         │                      │                      │                      │
-         ▼                      ▼                      ▼                      ▼
+│         │                      │                      │                      │
+│         │                      │                      │                      │
+│         ▼                      ▼                      ▼                      ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Data Consumers │◀───│  Monitoring     │◀───│  CI/CD & Auto   │◀───│  Governance     │
-│                 │    │                 │    │                 │    │                 │
-│ • BI Tools      │    │ • Observability │    │ • GitHub Actions│    │ • Unity Catalog │
-│ • ML Models     │    │ • Alerting      │    │ • Terraform     │    │ • Security      │
-│ • Dashboards    │    │ • Log Aggregation│    │ • Workflows     │    │ • Lineage       │
-│ • APIs          │    │ • Metrics       │    │ • Testing       │    │ • Audit Logs    │
+│  Consumidores   │◀───│  Monitoramento  │◀───│  CI/CD & Auto  │◀───│  Governança     │
+│  de Dados       │    │                 │    │                 │    │                 │
+│ • Ferramentas BI│    │ • Observabilidade│    │ • GitHub Actions│    │ • Unity Catalog │
+│ • Modelos ML    │    │ • Alertas       │    │ • Terraform     │    │ • Segurança     │
+│ • Dashboards    │    │ • Agregação Logs│    │ • Workflows     │    │ • Linhagem      │
+│ • APIs          │    │ • Métricas      │    │ • Testes        │    │ • Logs de Auditoria│
 └─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## Components
+## Componentes
 
-### 1. Data Sources Layer
+### 1. Camada de Fontes de Dados
 
-**Purpose**: Ingest data from various sources into Kafka
+**Propósito**: Ingerir dados de várias fontes para o Kafka
 
-**Components**:
-- **Applications**: Custom applications producing events
-- **IoT Devices**: Sensors and devices streaming telemetry
-- **Databases (CDC)**: Change Data Capture from operational databases
-- **APIs & Webhooks**: Event-driven API endpoints
-- **Legacy Systems**: Mainframe and legacy system integration
+**Componentes**:
+- **Aplicações**: Aplicações customizadas produzindo eventos
+- **Dispositivos IoT**: Sensores e dispositivos streaming telemetria
+- **Bancos de Dados (CDC)**: Change Data Capture de bancos operacionais
+- **APIs & Webhooks**: Endpoints API orientados a eventos
+- **Sistemas Legados**: Integração de mainframe e sistemas legados
 
-**Best Practices**:
-- Use schema registry for data consistency
-- Implement retry logic for failed sends
-- Monitor producer throughput and latency
-- Use appropriate serialization (Avro, JSON, Protobuf)
+**Melhores Práticas**:
+- Use schema registry para consistência de dados
+- Implemente lógica de retry para envios falhos
+- Monitore throughput e latência de produtores
+- Use serialização apropriada (Avro, JSON, Protobuf)
 
-### 2. Kafka Cluster Layer
+### 2. Camada de Cluster Kafka
 
-**Purpose**: Reliable, scalable event streaming platform
+**Propósito**: Plataforma de streaming de eventos confiável e escalável
 
-**Components**:
-- **Topics**: Organized event streams (users, orders, products, inventory)
-- **Schema Registry**: Central schema management and evolution
-- **Kafka Connect**: Connector framework for source/sink integration
-- **Consumer Groups**: Load balancing and fault tolerance
+**Componentes**:
+- **Tópicos**: Streams de eventos organizados (usuários, pedidos, produtos, inventário)
+- **Schema Registry**: Gerenciamento central de schema e evolução
+- **Kafka Connect**: Framework de connectors para integração source/sink
+- **Consumer Groups**: Balanceamento de carga e tolerância a falhas
 
-**Configuration**:
-- Replication factor: 3 (production)
-- Retention policy: 7-30 days based on requirements
-- Partition count: Based on throughput requirements
-- Security: SASL_SSL + ACLs
+**Configuração**:
+- Fator de replicação: 3 (produção)
+- Política de retenção: 7-30 dias baseado em requisitos
+- Contagem de partições: Baseado em requisitos de throughput
+- Segurança: SASL_SSL + ACLs
 
-**Best Practices**:
-- Use meaningful topic naming conventions
-- Implement appropriate partitioning strategies
-- Monitor consumer lag
-- Set up alerts for broker health
+**Melhores Práticas**:
+- Use convenções de nomes de tópicos significativas
+- Implemente estratégias de particionamento apropriadas
+- Monitore consumer lag
+- Configure alertas para saúde dos brokers
 
-### 3. Stream Processing Layer
+### 3. Camada de Processamento de Stream
 
-**Purpose**: Real-time data processing and transformation
+**Propósito**: Processamento e transformação de dados em tempo real
 
-**Components**:
-- **Spark Structured Streaming**: Core streaming engine
-- **Delta Live Tables (DLT)**: Automated pipeline management
-- **Real-time Transformations**: Data cleaning, enrichment, validation
-- **Data Quality Rules**: Quality expectations and validation
-- **Schema Evolution**: Automatic schema handling
-- **Watermarking**: Late data handling
-- **Auto-scaling**: Dynamic resource allocation
+**Componentes**:
+- **Spark Structured Streaming**: Engine de streaming principal
+- **Delta Live Tables (DLT)**: Gerenciamento automatizado de pipeline
+- **Transformações em Tempo Real**: Limpeza, enriquecimento, validação de dados
+- **Regras de Qualidade de Dados**: Expectativas de qualidade e validação
+- **Evolução de Schema**: Gerenciamento automático de schema
+- **Watermarking**: Gerenciamento de dados tardios
+- **Auto-scaling**: Alocação dinâmica de recursos
 
-**Processing Patterns**:
+**Padrões de Processamento**:
 ```python
-# Bronze Layer - Raw data ingestion
+# Camada Bronze - Ingestão de dados brutos
 bronze_df = spark.readStream.format("kafka").load()
   .transform(clean_and_parse)
   .withColumn("ingestion_timestamp", current_timestamp())
 
-# Silver Layer - Data quality and cleaning
+# Camada Silver - Qualidade de dados e limpeza
 silver_df = bronze_df
   .filter(quality_rules)
   .transform(enrich_data)
   .transform(deduplicate)
 
-# Gold Layer - Business logic and aggregations
+# Camada Gold - Lógica de negócio e agregações
 gold_df = silver_df
   .transform(business_logic)
   .groupBy(key_columns).agg(metrics)
 ```
 
-**Best Practices**:
-- Use exactly-once processing semantics
-- Implement idempotent operations
-- Set appropriate watermark for late data
-- Monitor processing latency
-- Use checkpoint locations for fault tolerance
+**Melhores Práticas**:
+- Use semântica de processamento exactly-once
+- Implemente operações idempotentes
+- Configure watermark apropriado para dados tardios
+- Monitore latência de processamento
+- Use localizações de checkpoint para tolerância a falhas
 
-### 4. Delta Lake Storage Layer
+### 4. Camada de Storage Delta Lake
 
-**Purpose**: Reliable, scalable storage with ACID transactions
+**Propósito**: Storage confiável e escalável com transações ACID
 
-**Layers**:
-- **Bronze Layer**: Raw data with minimal transformation
-  - Ingestion timestamps
-  - Source metadata
-  - Raw event payloads
-  - Partitioned by date/topic
+**Camadas**:
+- **Camada Bronze**: Dados brutos com transformação mínima
+  - Timestamps de ingestão
+  - Metadados de fonte
+  - Payloads de eventos brutos
+  - Particionado por data/tópico
 
-- **Silver Layer**: Cleaned and validated data
-  - Data quality applied
-  - Deduplicated
-  - Standardized schemas
-  - Business rules applied
+- **Camada Silver**: Dados limpos e validados
+  - Qualidade de dados aplicada
+  - Deduplicados
+  - Schemas padronizados
+  - Regras de negócio aplicadas
 
-- **Gold Layer**: Business-ready aggregations
-  - Star/snowflake schemas
-  - Pre-computed metrics
-  - Optimized for analytics
-  - ML feature tables
+- **Camada Gold**: Agregações prontas para negócio
+  - Schemas estrela/flocos de neve
+  - Métricas pré-computadas
+  - Otimizado para analytics
+  - Tabelas de features para ML
 
-**Storage Options**:
+**Opções de Storage**:
 - **AWS S3**: `s3://bucket/path/`
 - **Azure ADLS Gen2**: `abfss://container@account.dfs.core.windows.net/path/`
 - **Google Cloud Storage**: `gs://bucket/path/`
 
-**Best Practices**:
-- Enable auto-compaction and optimize write
-- Use appropriate partitioning strategies
-- Implement time travel for debugging
-- Set up vacuum policies for old data
-- Monitor storage costs and performance
+**Melhores Práticas**:
+- Habilite auto-compaction e optimize write
+- Use estratégias de particionamento apropriadas
+- Implemente time travel para debugging
+- Configure políticas de vacuum para dados antigos
+- Monitore custos e performance de storage
 
-### 5. Data Governance & Security Layer
+### 5. Camada de Governança e Segurança de Dados
 
-**Purpose**: Ensure data security, compliance, and governance
+**Propósito**: Garantir segurança, conformidade e governança de dados
 
-**Components**:
-- **Unity Catalog**: Centralized metadata management
-- **Row-level Security**: Fine-grained access control
-- **Data Lineage**: Track data transformation history
-- **Audit Logging**: Complete audit trail
+**Componentes**:
+- **Unity Catalog**: Gerenciamento centralizado de metadados
+- **Segurança em Nível de Linha**: Controle de acesso granular
+- **Linhagem de Dados**: Rastrear histórico de transformação de dados
+- **Logging de Auditoria**: Rastro de auditoria completo
 
-**Security Measures**:
-- End-to-end encryption (TLS)
-- IAM role-based access control
-- Network isolation (VPC endpoints)
-- Secrets management (Databricks Secrets)
-- Regular security audits
+**Medidas de Segurança**:
+- Criptografia end-to-end (TLS)
+- Controle de acesso baseado em roles (IAM)
+- Isolamento de rede (endpoints VPC)
+- Gerenciamento de secrets (Databricks Secrets)
+- Auditorias de segurança regulares
 
-**Compliance**:
-- GDPR compliance features
-- SOC2 controls
-- Data residency requirements
-- PII handling policies
+**Conformidade**:
+- Recursos de conformidade GDPR
+- Controles SOC2
+- Requisitos de residência de dados
+- Políticas de manuseio de PII
 
-### 6. Monitoring & Observability Layer
+### 6. Camada de Monitoramento e Observabilidade
 
-**Purpose**: Ensure system health and performance
+**Propósito**: Garantir saúde e performance do sistema
 
-**Components**:
-- **Databricks Monitoring**: Built-in cluster and query monitoring
-- **Grafana/Prometheus**: Custom metrics and dashboards
-- **Alerting**: Proactive issue detection
-- **Log Aggregation**: Centralized log management
+**Componentes**:
+- **Monitoramento Databricks**: Monitoramento integrado de cluster e queries
+- **Grafana/Prometheus**: Métricas customizadas e dashboards
+- **Alertas**: Detecção proativa de problemas
+- **Agregação de Logs**: Gerenciamento centralizado de logs
 
-**Key Metrics**:
-- **Streaming Metrics**:
-  - Processing latency (P50, P95, P99)
-  - Throughput (events/second)
+**Métricas Chave**:
+- **Métricas de Streaming**:
+  - Latência de processamento (P50, P95, P99)
+  - Throughput (eventos/segundo)
   - Consumer lag
-  - Error rates
+  - Taxas de erro
 
-- **Infrastructure Metrics**:
-  - Cluster utilization
-  - Storage I/O
-  - Network throughput
-  - API latency
+- **Métricas de Infraestrutura**:
+  - Utilização do cluster
+  - I/O de storage
+  - Throughput de rede
+  - Latência de API
 
-- **Business Metrics**:
-  - Data freshness
-  - Record counts by topic
-  - Quality score
-  - SLA compliance
+- **Métricas de Negócio**:
+  - Frescor dos dados
+  - Contagem de registros por tópico
+  - Score de qualidade
+  - Conformidade com SLA
 
-**Alerting Rules**:
-- High processing latency (> 5s P95)
-- Consumer lag > threshold
-- Error rate > 1%
-- Cluster failures
-- Storage capacity warnings
+**Regras de Alerta**:
+- Alta latência de processamento (> 5s P95)
+- Consumer lag acima do limite
+- Taxa de erro > 1%
+- Falhas de cluster
+- Avisos de capacidade de storage
 
-### 7. Data Consumers Layer
+### 7. Camada de Consumidores de Dados
 
-**Purpose**: Provide data to downstream applications
+**Propósito**: Fornecer dados para aplicações downstream
 
-**Components**:
-- **BI Tools**: Power BI, Tableau, Looker
-- **ML Models**: Feature stores, model training
-- **Real-time Dashboards**: Live analytics
-- **API Services**: REST/GraphQL endpoints
+**Componentes**:
+- **Ferramentas BI**: Power BI, Tableau, Looker
+- **Modelos ML**: Feature stores, treinamento de modelos
+- **Dashboards em Tempo Real**: Analytics ao vivo
+- **Serviços de API**: Endpoints REST/GraphQL
 
-**Access Patterns**:
-- **Batch**: Historical analysis, reporting
-- **Streaming**: Real-time monitoring, alerts
-- **Interactive**: Ad-hoc queries, exploration
-- **ML**: Feature serving, model inference
+**Padrões de Acesso**:
+- **Batch**: Análise histórica, relatórios
+- **Streaming**: Monitoramento em tempo real, alertas
+- **Interativo**: Queries ad-hoc, exploração
+- **ML**: Serving de features, inferência de modelos
 
-### 8. CI/CD & Automation Layer
+### 8. Camada de CI/CD e Automação
 
-**Purpose**: Automate deployment and operations
+**Propósito**: Automatizar deployment e operações
 
-**Components**:
-- **GitHub Actions**: CI/CD pipelines
-- **Terraform**: Infrastructure as Code
-- **Databricks Workflows**: Orchestration
-- **Automated Testing**: Data quality tests
+**Componentes**:
+- **GitHub Actions**: Pipelines CI/CD
+- **Terraform**: Infraestrutura como Código
+- **Workflows Databricks**: Orquestração
+- **Testes Automatizados**: Testes de qualidade de dados
 
-**Pipeline Stages**:
-1. **Development**: Feature branches, unit tests
-2. **Staging**: Integration tests, performance tests
-3. **Production**: Automated deployment, rollback capability
+**Estágios do Pipeline**:
+1. **Desenvolvimento**: Branches de features, testes unitários
+2. **Staging**: Testes de integração, testes de performance
+3. **Produção**: Deployment automatizado, capacidade de rollback
 
-**Best Practices**:
-- Infrastructure as Code
-- Automated testing (unit, integration, performance)
-- Blue-green deployments
-- Rollback procedures
-- Change management
+**Melhores Práticas**:
+- Infraestrutura como Código
+- Testes automatizados (unitários, integração, performance)
+- Deployments blue-green
+- Procedimentos de rollback
+- Gerenciamento de mudanças
 
-## Performance Characteristics
+## Características de Performance
 
-### Target Metrics
+### Métricas Alvo
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| End-to-end Latency | < 5s (P95) | Source to Bronze |
-| Throughput | 1M+ events/min | Per cluster |
-| Availability | 99.9% | Monthly uptime |
-| Recovery Time | < 15 min | RTO |
-| Data Loss | 0 events | RPO |
+| Métrica | Alvo | Medição |
+|---------|------|---------|
+| Latência End-to-end | < 5s (P95) | Fonte para Bronze |
+| Throughput | 1M+ eventos/min | Por cluster |
+| Disponibilidade | 99.9% | Uptime mensal |
+| Tempo de Recuperação | < 15 min | RTO |
+| Perda de Dados | 0 eventos | RPO |
 
-### Scalability
+### Escalabilidade
 
-- **Horizontal Scaling**: Add worker nodes as needed
-- **Auto-scaling**: Based on throughput and latency
-- **Multi-region**: Deploy across regions for disaster recovery
-- **Multi-cloud**: Support for AWS, Azure, GCP
+- **Escalabilidade Horizontal**: Adicione nós de worker conforme necessário
+- **Auto-scaling**: Baseado em throughput e latência
+- **Multi-região**: Deploy em múltiplas regiões para recuperação de desastres
+- **Multi-cloud**: Suporte para AWS, Azure, GCP
 
-## Cost Optimization
+## Otimização de Custos
 
-### Strategies
+### Estratégias
 
-1. **Spot Instances**: Use spot instances for non-critical workloads
-2. **Auto-termination**: Stop clusters when not in use
-3. **Storage Tiers**: Use appropriate storage classes
-4. **Compression**: Enable Delta compression
-5. **Partitioning**: Optimize for query patterns
+1. **Spot Instances**: Use spot instances para workloads não-críticas
+2. **Auto-termination**: Pare clusters quando não estiverem em uso
+3. **Tiers de Storage**: Use classes de storage apropriadas
+4. **Compressão**: Habilite compressão Delta
+5. **Particionamento**: Otimize para padrões de query
 
-### Cost Monitoring
+### Monitoramento de Custos
 
-- Track Databricks DBU consumption
-- Monitor storage costs by layer
-- Analyze query costs
-- Set up cost alerts
+- Rastreie consumo de DBUs Databricks
+- Monitore custos de storage por camada
+- Analise custos de queries
+- Configure alertas de custos
 
-## Disaster Recovery
+## Recuperação de Desastres
 
-### Backup Strategy
+### Estratégia de Backup
 
-- **Delta Time Travel**: Point-in-time recovery
-- **Cross-region replication**: Storage replication
-- **Checkpoint backups**: Regular checkpoint exports
-- **Configuration backups**: Infrastructure as Code
+- **Delta Time Travel**: Recuperação point-in-time
+- **Replicação Cross-region**: Replicação de storage
+- **Backups de Checkpoint**: Exportações regulares de checkpoint
+- **Backups de Configuração**: Infraestrutura como Código
 
-### Recovery Procedures
+### Procedimentos de Recuperação
 
-1. **Data Recovery**: Restore from time travel or backups
-2. **Cluster Recovery**: Redeploy from IaC
-3. **Configuration Recovery**: Restore from version control
-4. **Validation**: Run data quality checks
+1. **Recuperação de Dados**: Restaure de time travel ou backups
+2. **Recuperação de Cluster**: Redeploy de IaC
+3. **Recuperação de Configuração**: Restaure de controle de versão
+4. **Validação**: Execute verificações de qualidade de dados
 
-## Security Best Practices
+## Melhores Práticas de Segurança
 
-### Network Security
+### Segurança de Rede
 
-- VPC isolation
-- Private endpoints
-- Network security groups
-- IP whitelisting
+- Isolamento VPC
+- Endpoints privados
+- Grupos de segurança de rede
+- Whitelisting de IPs
 
-### Data Security
+### Segurança de Dados
 
-- Encryption at rest (S3/ADLS encryption)
-- Encryption in transit (TLS)
-- Key management (KMS)
-- Data masking for PII
+- Criptografia em repouso (criptografia S3/ADLS)
+- Criptografia em trânsito (TLS)
+- Gerenciamento de chaves (KMS)
+- Mascaramento de dados para PII
 
-### Access Control
+### Controle de Acesso
 
-- Role-based access control (RBAC)
-- Least privilege principle
-- Regular access reviews
-- MFA for admin access
+- Controle de acesso baseado em roles (RBAC)
+- Princípio de menor privilégio
+- Revisões de acesso regulares
+- MFA para acesso admin
 
-## Migration Strategy
+## Estratégia de Migração
 
-### Phase 1: Foundation (Weeks 1-4)
-- Set up Kafka cluster
-- Configure Databricks workspace
-- Implement basic streaming pipeline
-- Bronze layer only
+### Fase 1: Fundação (Semanas 1-4)
+- Configure cluster Kafka
+- Configure workspace Databricks
+- Implemente pipeline de streaming básico
+- Apenas camada Bronze
 
-### Phase 2: Enhancement (Weeks 5-8)
-- Add Silver layer with transformations
-- Implement data quality rules
-- Set up monitoring and alerting
-- Add additional topics
+### Fase 2: Melhoria (Semanas 5-8)
+- Adicione camada Silver com transformações
+- Implemente regras de qualidade de dados
+- Configure monitoramento e alertas
+- Adicione tópicos adicionais
 
-### Phase 3: Production (Weeks 9-12)
-- Implement Gold layer
-- Set up Unity Catalog
-- Configure security and governance
-- Performance optimization
-- Load testing
+### Fase 3: Produção (Semanas 9-12)
+- Implemente camada Gold
+- Configure Unity Catalog
+- Configure segurança e governança
+- Otimização de performance
+- Testes de carga
 
-### Phase 4: Scale (Weeks 13+)
-- Add more data sources
-- Implement advanced features
-- Multi-region deployment
-- Cost optimization
+### Fase 4: Escala (Semanas 13+)
+- Adicione mais fontes de dados
+- Implemente recursos avançados
+- Deploy multi-região
+- Otimização de custos
 
-## Troubleshooting Guide
+## Guia de Solução de Problemas
 
-### Common Issues
+### Problemas Comuns
 
-**High Consumer Lag**
-- Check cluster resources
-- Verify network connectivity
-- Review partition count
-- Check for skew in data distribution
+**Alto Consumer Lag**
+- Verifique recursos do cluster
+- Verifique conectividade de rede
+- Revise contagem de partições
+- Verifique skew na distribuição de dados
 
-**Schema Evolution Errors**
-- Review schema compatibility
-- Check schema registry configuration
-- Validate mergeSchema settings
-- Review backward compatibility
+**Erros de Evolução de Schema**
+- Revise compatibilidade de schema
+- Verifique configuração do schema registry
+- Valide configurações mergeSchema
+- Revise compatibilidade backward
 
-**Checkpoint Corruption**
-- Delete and recreate checkpoint
-- Review storage permissions
-- Check for sufficient storage
-- Validate checkpoint configuration
+**Corrupção de Checkpoint**
+- Delete e recrie checkpoint
+- Revise permissões de storage
+- Verifique storage suficiente
+- Valide configuração de checkpoint
 
-**Performance Degradation**
-- Review query plans
-- Check for small file problems
-- Verify partitioning strategy
-- Monitor resource utilization
+**Degradação de Performance**
+- Revise planos de query
+- Verifique problemas de arquivos pequenos
+- Valide estratégia de particionamento
+- Monitore utilização de recursos
 
-## Maintenance
+## Manutenção
 
-### Regular Tasks
+### Tarefas Regulares
 
-- **Daily**: Monitor streaming health, check alerts
-- **Weekly**: Review performance metrics, optimize queries
-- **Monthly**: Review costs, update dependencies, security patches
-- **Quarterly**: Architecture review, capacity planning
+- **Diariamente**: Monitore saúde de streaming, verifique alertas
+- **Semanalmente**: Revise métricas de performance, otimize queries
+- **Mensalmente**: Revise custos, atualize dependências, patches de segurança
+- **Trimestralmente**: Revisão de arquitetura, planejamento de capacidade
 
-### Maintenance Windows
+### Janelas de Manutenção
 
-- Schedule during low-traffic periods
-- Use blue-green deployments
-- Have rollback procedures ready
-- Communicate with stakeholders
+- Agende durante períodos de baixo tráfego
+- Use deployments blue-green
+- Tenha procedimentos de rollback prontos
+- Comunique com stakeholders
 
-## Documentation
+## Documentação
 
-### Required Documentation
+### Documentação Necessária
 
-- Architecture diagrams (this document)
-- Data dictionaries
-- SOPs for operations
-- Runbooks for common issues
-- Change logs
-- SLA documentation
+- Diagramas de arquitetura (este documento)
+- Dicionários de dados
+- SOPs para operações
+- Runbooks para problemas comuns
+- Logs de mudanças
+- Documentação de SLA
 
-## References
+## Referências
 
-- [Databricks Streaming Documentation](https://docs.databricks.com/spark/streaming/)
-- [Delta Lake Documentation](https://docs.delta.io/)
-- [Kafka Documentation](https://kafka.apache.org/documentation/)
-- [Confluent Cloud Documentation](https://docs.confluent.io/)
+- [Documentação de Streaming Databricks](https://docs.databricks.com/spark/streaming/)
+- [Documentação Delta Lake](https://docs.delta.io/)
+- [Documentação Kafka](https://kafka.apache.org/documentation/)
+- [Documentação Confluent Cloud](https://docs.confluent.io/)

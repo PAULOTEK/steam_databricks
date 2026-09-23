@@ -1,62 +1,62 @@
-# Setup Guide - Kafka Streaming with Databricks
+# Guia de Configuração - Streaming Kafka com Databricks
 
-## Prerequisites
+## Pré-requisitos
 
-1. **Databricks Workspace** - You need access to a Databricks workspace
-2. **Kafka Cluster** - Confluent Cloud or self-hosted Kafka cluster
-3. **External Storage** - S3 (AWS) or ADLS (Azure) for checkpoints and Delta tables
-4. **Databricks Cluster** - With appropriate Spark configurations
+1. **Databricks Workspace** - Você precisa de acesso a um workspace Databricks
+2. **Cluster Kafka** - Cluster Confluent Cloud ou Kafka self-hosted
+3. **Storage Externo** - S3 (AWS) ou ADLS (Azure) para checkpoints e tabelas Delta
+4. **Cluster Databricks** - Com configurações Spark apropriadas
 
-## Kafka Configuration
+## Configuração do Kafka
 
-### Confluent Cloud Setup
+### Setup do Confluent Cloud
 
-1. Go to [Confluent Cloud](https://confluent.cloud/)
-2. Create a cluster or use existing one
-3. Create API Key and Secret
-4. Create topics (e.g., `sample_data_users`)
-5. Note down:
-   - Bootstrap servers (e.g., `pkc-xxxxx.eastus.azure.confluent.cloud:9092`)
+1. Acesse [Confluent Cloud](https://confluent.cloud/)
+2. Crie um cluster ou use um existente
+3. Crie API Key e Secret
+4. Crie tópicos (ex: `sample_data_users`)
+5. Anote:
+   - Bootstrap servers (ex: `pkc-xxxxx.eastus.azure.confluent.cloud:9092`)
    - API Key
    - API Secret
-   - Topic names
+   - Nomes dos tópicos
 
-### Update Notebook Parameters
+### Atualizar Parâmetros dos Notebooks
 
-Replace the placeholder values in each notebook:
+Substitua os valores placeholder em cada notebook:
 
 ```python
-confluentBootstrapServers = "your-bootstrap-servers"
-confluentTopicName = "your-topic-name"
-confluentApiKey = "your-api-key"
-confluentSecret = "your-api-secret"
+confluentBootstrapServers = "seus-bootstrap-servers"
+confluentTopicName = "seu-nome-topico"
+confluentApiKey = "sua-api-key"
+confluentSecret = "seu-api-secret"
 ```
 
-## External Storage Setup
+## Configuração de Storage Externo
 
 ### AWS S3
 
-1. Create an S3 bucket for checkpoints and Delta tables
-2. Configure IAM role with appropriate permissions
-3. Update notebook with:
+1. Crie um bucket S3 para checkpoints e tabelas Delta
+2. Configure role IAM com permissões apropriadas
+3. Atualize o notebook com:
    ```python
-   checkpoint_location = "s3://your-bucket-name/checkpoints/your-checkpoint-name"
+   checkpoint_location = "s3://seu-bucket/checkpoints/seu-checkpoint"
    ```
 
 ### Azure Data Lake Storage (ADLS)
 
-1. Create a storage account and container
-2. Configure access credentials
-3. Update notebook with:
+1. Crie uma conta de storage e container
+2. Configure credenciais de acesso
+3. Atualize o notebook com:
    ```python
-   checkpoint_location = "abfss://container@storageaccount.dfs.core.windows.net/checkpoints/your-checkpoint-name"
+   checkpoint_location = "abfss://container@storageaccount.dfs.core.windows.net/checkpoints/seu-checkpoint"
    ```
 
-## Databricks Cluster Configuration
+## Configuração do Cluster Databricks
 
-### Required Libraries
+### Bibliotecas Necessárias
 
-Install these libraries on your cluster:
+Instale estas bibliotecas no seu cluster:
 
 ```json
 {
@@ -71,87 +71,87 @@ Install these libraries on your cluster:
 }
 ```
 
-### Cluster Settings
+### Configurações do Cluster
 
-- **Spark Version**: 3.5.x or higher
-- **Scala Version**: 2.12
-- **Python Version**: 3.10 or higher
-- **Worker Type**: Based on your data volume
-- **Driver Type**: Based on your requirements
+- **Versão Spark**: 3.5.x ou superior
+- **Versão Scala**: 2.12
+- **Versão Python**: 3.10 ou superior
+- **Tipo de Worker**: Baseado no volume de dados
+- **Tipo de Driver**: Baseado nos seus requisitos
 
-## Notebook Usage
+## Uso dos Notebooks
 
-### 1. Basic Streaming (read_stream_from_kafka.py)
+### 1. Streaming Básico (read_stream_from_kafka.py)
 
-Use this to:
-- Test your Kafka connection
-- Verify data format
-- Understand schema structure
+Use este notebook para:
+- Testar sua conexão Kafka
+- Verificar formato dos dados
+- Entender estrutura do schema
 
-### 2. Continuous Streaming to Bronze (kafka_to_bronze_streaming.py)
+### 2. Streaming Contínuo para Bronze (kafka_to_bronze_streaming.py)
 
-Use this to:
-- Create a continuous streaming pipeline
-- Ingest data to Bronze table
-- Monitor real-time data flow
+Use este notebook para:
+- Criar um pipeline de streaming contínuo
+- Ingerir dados para tabela Bronze
+- Monitorar fluxo de dados em tempo real
 
 ### 3. Delta Live Tables (kafka_dlt_bronze.py)
 
-Use this to:
-- Create automated production pipelines
-- Implement data quality rules
-- Manage schema evolution
-- Simplify operations
+Use este notebook para:
+- Criar pipelines de produção automatizados
+- Implementar regras de qualidade de dados
+- Gerenciar evolução de schema
+- Simplificar operações
 
-### 4. Multiple Topics (multiple_kafka_topics_bronze.py)
+### 4. Múltiplos Tópicos (multiple_kafka_topics_bronze.py)
 
-Use this to:
-- Process multiple Kafka topics simultaneously
-- Create separate Bronze tables per topic
-- Join data from different topics
+Use este notebook para:
+- Processar múltiplos tópicos Kafka simultaneamente
+- Criar tabelas Bronze separadas por tópico
+- Fazer join de dados de diferentes tópicos
 
-### 5. Real-time Transformations (kafka_realtime_transformations.py)
+### 5. Transformações em Tempo Real (kafka_realtime_transformations.py)
 
-Use this to:
-- Apply transformations in real-time
-- Add business logic during ingestion
-- Create real-time metrics
-- Monitor data quality
+Use este notebook para:
+- Aplicar transformações em tempo real
+- Adicionar lógica de negócio durante ingestão
+- Criar métricas em tempo real
+- Monitorar qualidade de dados
 
-## Best Practices
+## Melhores Práticas
 
-### Checkpoint Management
+### Gerenciamento de Checkpoints
 
-- Use separate checkpoint locations for each streaming query
-- Store checkpoints in the same region as your Databricks workspace
-- Don't delete checkpoints unless you want to restart from beginning
+- Use localizações de checkpoint separadas para cada query de streaming
+- Armazene checkpoints na mesma região do seu workspace Databricks
+- Não delete checkpoints a menos que queira reiniciar do início
 
-### Schema Management
+### Gerenciamento de Schema
 
-- Define schemas explicitly for better performance
-- Use `mergeSchema` option for schema evolution
-- Monitor schema changes in production
+- Defina schemas explicitamente para melhor performance
+- Use opção `mergeSchema` para evolução de schema
+- Monitore mudanças de schema em produção
 
-### Performance Optimization
+### Otimização de Performance
 
-- Use partitioning for large tables
-- Enable auto-compaction and optimize write
-- Set appropriate trigger intervals based on latency requirements
-- Use watermarking for stateful operations
+- Use particionamento para tabelas grandes
+- Habilite auto-compaction e optimize write
+- Configure intervalos de trigger apropriados baseados em requisitos de latência
+- Use watermarking para operações com estado
 
-### Monitoring
+### Monitoramento
 
-- Monitor streaming query status regularly
-- Check processing latency metrics
-- Set up alerts for failures
-- Review query progress and statistics
+- Monitore status de queries de streaming regularmente
+- Verifique métricas de latência de processamento
+- Configure alertas para falhas
+- Revise progresso e estatísticas das queries
 
-## Troubleshooting
+## Solução de Problemas
 
-### Connection Issues
+### Problemas de Conexão
 
 ```python
-# Test Kafka connection
+# Testar conexão Kafka
 df_test = spark.readStream.format("kafka") \
     .option("kafka.bootstrap.servers", confluentBootstrapServers) \
     .option("kafka.security.protocol", "SASL_SSL") \
@@ -161,45 +161,45 @@ df_test = spark.readStream.format("kafka") \
     .load()
 ```
 
-### Schema Mismatch
+### Incompatibilidade de Schema
 
-- Verify your schema matches the Kafka topic data
-- Check for nested JSON structures
-- Use `display(df_raw)` to inspect raw data
+- Verifique se seu schema corresponde aos dados do tópico Kafka
+- Verifique estruturas JSON aninhadas
+- Use `display(df_raw)` para inspecionar dados brutos
 
-### Performance Issues
+### Problemas de Performance
 
-- Increase cluster resources
-- Adjust trigger intervals
-- Review partitioning strategy
-- Check for skew in data distribution
+- Aumente recursos do cluster
+- Ajuste intervalos de trigger
+- Revise estratégia de particionamento
+- Verifique skew na distribuição de dados
 
-### Checkpoint Issues
+### Problemas de Checkpoint
 
-- Ensure checkpoint location is accessible
-- Check for sufficient storage space
-- Verify IAM/permissions
-- Delete and recreate checkpoint if corrupted
+- Certifique-se que a localização do checkpoint está acessível
+- Verifique espaço de armazenamento suficiente
+- Verifique IAM/permissões
+- Delete e recrie checkpoint se estiver corrompido
 
-## Security Considerations
+## Considerações de Segurança
 
-- Never commit API keys to version control
-- Use Databricks Secrets for sensitive information
-- Enable SSL/TLS for Kafka connections
-- Implement proper IAM roles for storage access
-- Use VPC endpoints for private connectivity
+- Nunca commit API keys para controle de versão
+- Use Databricks Secrets para informações sensíveis
+- Habilite SSL/TLS para conexões Kafka
+- Implemente roles IAM apropriadas para acesso ao storage
+- Use endpoints VPC para conectividade privada
 
-## Next Steps
+## Próximos Passos
 
-1. Start with the basic example to verify connectivity
-2. Progress to continuous streaming for production use
-3. Implement Delta Live Tables for automated pipelines
-4. Add data quality rules and monitoring
-5. Scale to multiple topics and complex transformations
+1. Comece com o exemplo básico para verificar conectividade
+2. Progrida para streaming contínuo para uso em produção
+3. Implemente Delta Live Tables para pipelines automatizados
+4. Adicione regras de qualidade de dados e monitoramento
+5. Escale para múltiplos tópicos e transformações complexas
 
-## Support
+## Suporte
 
-For issues or questions:
-- Check Databricks documentation: https://docs.databricks.com/
-- Kafka documentation: https://kafka.apache.org/documentation/
-- Confluent Cloud docs: https://docs.confluent.io/
+Para problemas ou dúvidas:
+- Consulte documentação Databricks: https://docs.databricks.com/
+- Documentação Kafka: https://kafka.apache.org/documentation/
+- Documentação Confluent Cloud: https://docs.confluent.io/

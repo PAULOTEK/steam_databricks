@@ -1,57 +1,59 @@
-# Databricks Series
+# Streaming Databricks com Kafka
 
-Start your Databricks journey from the very basics and become a pro! This playlist covers everything you need to know—from foundational concepts to advanced data engineering, analytics, and AI—all using the powerful Databricks Lakehouse platform. Follow along with clear explanations and practical examples to boost your skills step-by-step.
+Este repositório contém exemplos práticos de pipelines de streaming de dados usando Kafka e Databricks:
 
-Course link: https://youtube.com/playlist?list=PLjl2dJMjkDjkY_R9vv8WoZL6Dj7hIAtDT&si=dLoQAfVA8A4pzagU
+## Notebooks
 
-Follow us:
-* Join the channel: https://www.youtube.com/channel/UCwhERUcuzUCwr8x8mQ8zrcw/join
-* YouTube: https://www.youtube.com/@TechWithYeshwanth/videos
-* Follow our GitHub here: https://github.com/yeshwanthlm
-* Follow our blog here: https://dev.to/yeshwanthlm/
-* Follow us on Instagram: https://www.instagram.com/techwithyeshwanth/
-* Follow us on LinkedIn: https://www.linkedin.com/in/yeshwanth-l-m/
-* Book 1:1 Meeting with me: https://topmate.io/techwithyeshwanth
+1. **read_stream_from_kafka.py** - Exemplo básico de leitura de tópico Kafka e exibição de dados
+2. **kafka_to_bronze_streaming.py** - Exemplo completo de streaming contínuo do Kafka para tabela Bronze
+3. **kafka_dlt_bronze.py** - Implementação de Delta Live Tables para pipeline automatizado
+4. **multiple_kafka_topics_bronze.py** - Leitura de múltiplos tópicos Kafka simultaneamente
+5. **kafka_realtime_transformations.py** - Transformações e enriquecimentos de dados em tempo real
 
-#Databricks #Lakehouse #DataEngineering #BigData #Analytics #DataLakes #DataWarehouse #MachineLearning #CloudComputing #DataScience #DataPlatform #TechWithYeshwanth
+## Recursos Principais
 
-## Kafka Streaming Examples
+- **Streaming Contínuo**: Processa eventos em tempo real conforme chegam
+- **Tabelas Bronze**: Ingestão de dados brutos com rastreamento de metadados
+- **Delta Live Tables**: Gerenciamento automatizado de pipeline com regras de qualidade de dados
+- **Suporte a Múltiplos Tópicos**: Processa múltiplos tópicos Kafka em paralelo
+- **Transformações em Tempo Real**: Limpa, valida e enriquece dados dinamicamente
+- **Watermarking**: Gerencia dados que chegam tarde com operações em janela
 
-This repository contains practical examples of streaming data pipelines using Kafka and Databricks:
+## Início Rápido
 
-### Notebooks
+1. Configure os parâmetros de conexão Kafka em cada notebook
+2. Configure sua localização externa para checkpoints (S3/ADLS)
+3. Execute os notebooks no Databricks
+4. Monitore as queries de streaming e consulte tabelas Bronze em tempo real
 
-1. **read_stream_from_kafka.py** - Basic example of reading from Kafka topic and displaying data
-2. **kafka_to_bronze_streaming.py** - Complete example of continuous streaming from Kafka to Bronze table
-3. **kafka_dlt_bronze.py** - Delta Live Tables implementation for automated streaming pipeline
-4. **multiple_kafka_topics_bronze.py** - Reading from multiple Kafka topics simultaneously
-5. **kafka_realtime_transformations.py** - Real-time data transformations and enrichments
-
-### Key Features
-
-- **Continuous Streaming**: Process events in real-time as they arrive
-- **Bronze Tables**: Raw data ingestion with metadata tracking
-- **Delta Live Tables**: Automated pipeline management with data quality expectations
-- **Multi-topic Support**: Handle multiple Kafka topics in parallel
-- **Real-time Transformations**: Clean, validate, and enrich data on-the-fly
-- **Watermarking**: Handle late-arriving data with windowed operations
-
-### Quick Start
-
-1. Configure your Kafka connection parameters in each notebook
-2. Set up your external location for checkpoints (S3/ADLS)
-3. Run the notebooks in Databricks
-4. Monitor streaming queries and query Bronze tables in real-time
-
-### Architecture
+## Arquitetura
 
 ```
-Kafka Topics → Spark Streaming → Bronze Tables → Silver/Gold Tables
+Tópicos Kafka → Spark Streaming → Tabelas Bronze → Tabelas Silver/Gold
      ↓                    ↓                ↓
-  Events          Transformations      Analytics
+  Eventos          Transformações      Analytics
 ```
 
-For detailed production architecture, see:
-- **ARCHITECTURE.md** - Complete production architecture documentation
-- **architecture-drawio.xml** - Visual architecture diagram (import into Draw.io)
-- **production-config-examples.py** - Production-ready configuration examples
+Para arquitetura de produção detalhada, consulte:
+- **ARCHITECTURE.md** - Documentação completa de arquitetura de produção
+- **architecture-drawio.xml** - Diagrama de arquitetura visual (importe no Draw.io)
+- **production-config-examples.py** - Exemplos de configuração prontos para produção
+
+## Requisitos
+
+- Databricks Workspace
+- Cluster Kafka (Confluent Cloud ou self-hosted)
+- Storage externo (S3 ou ADLS Gen2)
+- Cluster Databricks com configurações Spark apropriadas
+
+## Guia de Configuração
+
+Consulte o arquivo `SETUP_GUIDE.md` para instruções detalhadas de:
+- Configuração do Kafka
+- Setup de storage externo
+- Configuração do cluster Databricks
+- Solução de problemas
+
+## Licença
+
+Este projeto é fornecido para fins educacionais e de demonstração.
